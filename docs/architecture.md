@@ -285,7 +285,7 @@ stateDiagram-v2
 
 ---
 
-## 10. Stack Decisions Locked in Step 1
+## 10. Stack Decisions Locked
 
 | Choice | Decision |
 |---|---|
@@ -296,7 +296,6 @@ stateDiagram-v2
 | Layout | `apps/api` + `apps/worker` + shared `libs/*` (`@app/*`) |
 | Package manager | **npm** (lockfile committed; pnpm optional later) |
 | Local ops | Docker Compose (API, Worker, Postgres, Redis) |
-| Docs | Step explanations in `docs/STEP-XX-*.md` |
 
 ---
 
