@@ -2,10 +2,6 @@
 
 Production-inspired asynchronous job platform built with **NestJS**, **PostgreSQL**, **Redis**, **BullMQ**, and **sequelize-typescript**.
 
-## Architecture (Step 1)
-
-See [docs/STEP-01-architecture.md](docs/STEP-01-architecture.md), [docs/SYSTEM-DESIGN.md](docs/SYSTEM-DESIGN.md) (Mermaid), and [docs/INTERVIEW-ARCHITECTURE-WALKTHROUGH.md](docs/INTERVIEW-ARCHITECTURE-WALKTHROUGH.md) (interview talk track + Q&A, no diagrams).
-
 ```
 Client → NestJS API → PostgreSQL (truth) + Redis/BullMQ (dispatch) → NestJS Worker
 ```
@@ -144,9 +140,7 @@ curl -s -X DELETE http://localhost:3000/api/v1/jobs/<id> \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-Docs: [docs/STEP-02-database.md](docs/STEP-02-database.md) · [docs/STEP-03-job-apis.md](docs/STEP-03-job-apis.md) · [docs/STEP-04-worker.md](docs/STEP-04-worker.md) · [docs/STEP-05-observability-security.md](docs/STEP-05-observability-security.md)
-
-## Auth (Step 5)
+## Auth
 
 ```bash
 # Login (default admin / admin123)
@@ -161,7 +155,7 @@ curl -s http://localhost:3000/api/v1/jobs \
 
 In Swagger: Authorize → `Bearer <token>`.
 
-## Worker (Step 4)
+## Worker
 
 ```bash
 npm run start:worker:dev

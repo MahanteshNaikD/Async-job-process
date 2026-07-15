@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@app/config": ["libs/config/src"],
+      "@app/config/*": ["libs/config/src/*"],
+      "@app/common": ["libs/common/src"],
+      "@app/common/*": ["libs/common/src/*"],
+      "@app/database": ["libs/database/src"],
+      "@app/database/*": ["libs/database/src/*"],
+      "@app/jobs": ["libs/jobs/src"],
+      "@app/jobs/*": ["libs/jobs/src/*"],
+      "@app/queue": ["libs/queue/src"],
+      "@app/queue/*": ["libs/queue/src/*"],
+      "@app/health": ["libs/health/src"],
+      "@app/health/*": ["libs/health/src/*"],
+      "@app/metrics": ["libs/metrics/src"],
+      "@app/metrics/*": ["libs/metrics/src/*"],
+      "@app/auth": ["libs/auth/src"],
+      "@app/auth/*": ["libs/auth/src/*"]
+    }
+  }
+}

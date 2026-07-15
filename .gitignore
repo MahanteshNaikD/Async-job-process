@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+dist/
+coverage/
+
+# Env / secrets
+.env
+.env.local
+*.pem
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test
+/tmp/
+
+
+docs/**

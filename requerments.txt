@@ -1,0 +1,50 @@
+Functional Requirements
+
+Submit a background job.
+Store job metadata persistently.
+Push the job into a queue.
+Process the job asynchronously.
+Retry failed jobs.
+Track job status.
+View job details.
+List jobs with filtering and pagination.
+Expose queue health and metrics.
+
+
+
+Non-Functional Requirements
+
+Reliable
+Horizontally scalable
+Easy to understand
+Fault tolerant
+Observable
+Extensible
+Maintainable
+
+
+
+Core Features
+
+Create Job API
+Get Job API
+List Jobs API
+BullMQ queue
+Worker
+PostgreSQL persistence
+Retry mechanism
+Job status tracking
+Logging
+Docker Compose
+Health endpoint
+Metrics endpoint
+Swagger
+Validation
+Dead Letter Queue
+Delayed jobs
+Priority jobs
+Queue pause/resume
+Scheduled jobs
+Rate limiting
+Worker concurrency configuration
+Idempotency keys

@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: async_jobs_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-jobs}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-jobs}
+      POSTGRES_DB: ${DATABASE_NAME:-async_jobs}
+    ports:
+      - '${DATABASE_HOST_PORT:-5433}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER:-jobs} -d ${DATABASE_NAME:-async_jobs}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: async_jobs_redis
+    restart: unless-stopped
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/api.Dockerfile
+    container_name: async_jobs_api
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      NODE_ENV: production
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_DIR: /app/logs
+    volumes:
+      - ../logs:/app/logs
+    ports:
+      - '${API_PORT:-3000}:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/worker.Dockerfile
+    container_name: async_jobs_worker
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      NODE_ENV: production
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_DIR: /app/logs
+    volumes:
+      - ../logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:

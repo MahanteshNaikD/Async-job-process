@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AsyncJob Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <div>
+        <strong>AsyncJob</strong>
+        <p>Operations console</p>
+      </div>
+    </div>
+    <nav class="top-links">
+      <a href="/docs" target="_blank" rel="noreferrer">Swagger</a>
+      <a href="/api/health" target="_blank" rel="noreferrer">Health</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="panel auth-panel" id="auth-panel">
+      <h1>Sign in</h1>
+      <p class="lede">Use demo credentials to exercise jobs, queue controls, and metrics.</p>
+      <form id="login-form" class="stack">
+        <label>Username<input id="username" name="username" value="admin" autocomplete="username" /></label>
+        <label>Password<input id="password" name="password" type="password" value="admin123" autocomplete="current-password" /></label>
+        <button type="submit">Continue</button>
+      </form>
+      <p id="auth-error" class="error" hidden></p>
+    </section>
+
+    <section class="workspace" id="workspace" hidden>
+      <aside class="rail">
+        <div class="user-chip">
+          <span id="user-label">admin</span>
+          <button type="button" id="logout-btn" class="ghost">Sign out</button>
+        </div>
+        <div class="stat-grid" id="quick-stats">
+          <div><span>Waiting</span><strong id="stat-waiting">—</strong></div>
+          <div><span>Active</span><strong id="stat-active">—</strong></div>
+          <div><span>Failed</span><strong id="stat-failed">—</strong></div>
+          <div><span>DLQ</span><strong id="stat-dlq">—</strong></div>
+        </div>
+        <div class="rail-block">
+          <h2>Queue</h2>
+          <p id="queue-paused" class="muted">Status: …</p>
+          <div class="row">
+            <button type="button" id="pause-btn">Pause</button>
+            <button type="button" id="resume-btn" class="secondary">Resume</button>
+          </div>
+        </div>
+        <div class="rail-block">
+          <h2>Health</h2>
+          <pre id="health-box" class="code-box">…</pre>
+        </div>
+        <button type="button" id="refresh-meta" class="ghost full">Refresh metrics</button>
+      </aside>
+
+      <div class="content">
+        <section class="panel">
+          <div class="section-head">
+            <h2>Submit job</h2>
+            <p>Create now, delay with <code>delayMs</code>, or schedule with <code>runAt</code>.</p>
+          </div>
+          <form id="job-form" class="grid-form">
+            <label>Type
+              <select id="job-type">
+                <option value="demo.success">demo.success</option>
+                <option value="demo.fail">demo.fail</option>
+                <option value="demo.flaky">demo.flaky</option>
+                <option value="email.send">email.send</option>
+              </select>
+            </label>
+            <label>Priority
+              <select id="job-priority">
+                <option value="0">Normal (0)</option>
+                <option value="50">Medium (50)</option>
+                <option value="100">High (100)</option>
+              </select>
+            </label>
+            <label>Max attempts<input id="job-attempts" type="number" min="1" max="25" value="3" /></label>
+            <label>Idempotency key<input id="job-idem" placeholder="optional" /></label>
+            <label>delayMs<input id="job-delay" type="number" min="0" placeholder="e.g. 5000" /></label>
+            <label>runAt (calendar)
+              <input id="job-runat" type="datetime-local" step="1" />
+              <span class="hint">Leave empty to run ASAP (or use delayMs). Local time → sent as UTC ISO.</span>
+            </label>
+            <label class="span-2">Payload (JSON)
+              <textarea id="job-payload" rows="4">{"to":"user@example.com","template":"welcome"}</textarea>
+            </label>
+            <div class="span-2 actions">
+              <button type="submit">Enqueue job</button>
+              <p id="job-form-msg" class="muted"></p>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="section-head row-between">
+            <div>
+              <h2>Jobs</h2>
+              <p>Filter and inspect lifecycle status.</p>
+            </div>
+            <button type="button" id="refresh-jobs" class="secondary">Refresh</button>
+          </div>
+          <div class="filters row">
+            <label>Status
+              <select id="filter-status">
+                <option value="">All</option>
+                <option>queued</option>
+                <option>delayed</option>
+                <option>processing</option>
+                <option>retrying</option>
+                <option>completed</option>
+                <option>failed</option>
+                <option>dead_letter</option>
+                <option>cancelled</option>
+              </select>
+            </label>
+            <label>Type<input id="filter-type" placeholder="email.send" /></label>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Type</th>
+                  <th>Attempts</th>
+                  <th>Priority</th>
+                  <th>Created</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="jobs-body">
+                <tr><td colspan="6" class="muted">Sign in to load jobs</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="detail-panel" hidden>
+          <div class="section-head row-between">
+            <h2>Job detail</h2>
+            <div class="row">
+              <span id="detail-actions"></span>
+              <button type="button" id="close-detail" class="ghost">Close</button>
+            </div>
+          </div>
+          <pre id="job-detail" class="code-box"></pre>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <h2>Metrics</h2>
+            <p>Live BullMQ + Postgres snapshot.</p>
+          </div>
+          <pre id="metrics-box" class="code-box">…</pre>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="/app.js"></script>
+</body>
+</html>
