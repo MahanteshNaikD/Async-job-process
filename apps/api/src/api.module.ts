@@ -12,6 +12,7 @@ import { HealthModule } from '@app/health';
 import { MetricsModule } from '@app/metrics';
 import { JobsController } from './jobs.controller';
 import { QueueController } from './queue.controller';
+import { DeadLetterJobsController } from './dead-letter-jobs.controller';
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import { QueueController } from './queue.controller';
     HealthModule,
     MetricsModule,
   ],
-  controllers: [JobsController, QueueController],
+  controllers: [JobsController, QueueController, DeadLetterJobsController],
   providers: [
     {
       provide: APP_GUARD,

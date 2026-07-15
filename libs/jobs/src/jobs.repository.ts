@@ -19,7 +19,7 @@ export interface ListJobsInput {
   type?: string;
   page: number;
   limit: number;
-  sortBy: 'createdAt' | 'priority' | 'availableAt';
+  sortBy: 'createdAt' | 'priority' | 'availableAt' | 'completedAt';
   sortOrder: 'asc' | 'desc';
 }
 

@@ -217,6 +217,27 @@ describe('JobsService — job submission', () => {
       NotFoundException,
     );
   });
+
+  it('lists dead-letter jobs with fixed dead_letter status filter', async () => {
+    const dlqJob = makeJob({
+      status: JobStatus.DeadLetter,
+      lastError: 'fatal',
+      completedAt: new Date(),
+    });
+    repository.findMany.mockResolvedValue({ rows: [dlqJob], count: 1 });
+
+    const result = await service.listDeadLetter({ page: 1, limit: 10 });
+
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].status).toBe(JobStatus.DeadLetter);
+    expect(repository.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: JobStatus.DeadLetter,
+        page: 1,
+        limit: 10,
+      }),
+    );
+  });
 });
 
 describe('JobsService — cancel', () => {

@@ -138,6 +138,10 @@ curl -s http://localhost:3000/api/v1/jobs/<id>
 # Cancel (queued / delayed / retrying only)
 curl -s -X DELETE http://localhost:3000/api/v1/jobs/<id> \
   -H "Authorization: Bearer $TOKEN"
+
+# Dead-letter jobs (exhausted retries)
+curl -s 'http://localhost:3000/api/v1/dead-letter-jobs?page=1&limit=20' \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ## Auth

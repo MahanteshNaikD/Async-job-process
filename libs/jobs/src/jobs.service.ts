@@ -10,6 +10,7 @@ import { UniqueConstraintError } from 'sequelize';
 import { JobProducer } from '@app/queue/job.producer';
 import { CreateJobDto } from './dto/create-job.dto';
 import { ListJobsQueryDto } from './dto/list-jobs-query.dto';
+import { ListDeadLetterJobsQueryDto } from './dto/list-dead-letter-jobs-query.dto';
 import {
   JobResponseDto,
   PaginatedJobsResponseDto,
@@ -223,6 +224,47 @@ export class JobsService {
 
     const { rows, count } = await this.jobsRepository.findMany({
       status: query.status,
+      type: query.type,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    });
+
+    return {
+      data: rows.map((job) => JobResponseDto.fromEntity(job)),
+      meta: {
+        page,
+        limit,
+        total: count,
+        totalPages: Math.ceil(count / limit) || 0,
+      },
+    };
+  }
+
+  /**
+   * Jobs that exhausted retries / were moved to the dead-letter path.
+   * Reads Postgres (source of truth), not Redis.
+   */
+  async listDeadLetter(
+    query: ListDeadLetterJobsQueryDto,
+  ): Promise<PaginatedJobsResponseDto> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const sortBy = query.sortBy ?? 'completedAt';
+    const sortOrder = query.sortOrder ?? 'desc';
+
+    this.logger.log({
+      step: 'list_dead_letter_jobs',
+      page,
+      limit,
+      type: query.type ?? null,
+      sortBy,
+      sortOrder,
+    });
+
+    const { rows, count } = await this.jobsRepository.findMany({
+      status: JobStatus.DeadLetter,
       type: query.type,
       page,
       limit,
