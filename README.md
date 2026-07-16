@@ -21,7 +21,7 @@ Client → NestJS API → PostgreSQL (truth) + Redis/BullMQ (dispatch) → NestJ
 | `libs/metrics` | `/api/metrics` |
 | `docker/` | Compose + Dockerfiles |
 
-## Quick start
+## Setup & running locally
 
 ```bash
 cp .env.example .env
@@ -118,9 +118,13 @@ npm run docker:infra   # Redis (local Postgres on 5432)
 npm run db:migrate
 ```
 
-## Job APIs (Step 3)
+## API documentation
+
+Interactive OpenAPI: **http://localhost:3000/docs** (Swagger).
 
 All responses: `{ "message": "Successful", "statusCode": 200, "data": { ... } }`.
+
+Protected routes need `Authorization: Bearer <token>` (see Auth below).
 
 ```bash
 # Create
@@ -169,15 +173,53 @@ Test handlers: `demo.success`, `demo.fail` (→ DLQ), `demo.flaky`, `email.send`
 
 Queue ops: `POST /api/v1/queue/pause` · `POST /api/v1/queue/resume` · `GET /api/v1/queue/status`
 
+## Documentation
+
+This README covers **setup**, **running locally**, and **API quick start**.
+
+Full design write-ups, diagrams, and interview notes live under **[`docs/`](docs/)**:
+
+| Path | Contents |
+|------|----------|
+| [`docs/architecture.md`](docs/architecture.md) | High-level architecture, design decisions, tradeoffs, data flow |
+| [`docs/HLD.png`](docs/HLD.png) | High-level design diagram |
+| [`docs/job submit squence.png`](docs/job%20submit%20squence.png) | Job submit sequence |
+| [`docs/priority model.png`](docs/priority%20model.png) | Priority mapping |
+| [`docs/mono repo.png`](docs/mono%20repo.png) | Monorepo / module layout |
+| [`docs/read & write.png`](docs/read%20%26%20write.png) | Read vs write paths |
+
+**Interactive API docs (OpenAPI):** http://localhost:3000/docs (Swagger)
+
+Assignment brief: [`requerments.txt`](requerments.txt)
+
+## Design decisions (summary)
+
+- **PostgreSQL** = source of truth for job metadata, status, listing, and idempotency.
+- **Redis + BullMQ** = dispatch layer (claim, delay, priority, retries, locks). Workers never “run jobs from the DB.”
+- **Separate API and worker processes** so HTTP and compute scale independently.
+- **BullMQ** chosen over a custom Redis queue for delay, priority, stalled recovery, and retries.
+- **At-least-once** delivery; handlers should be idempotent. Exactly-once is not claimed.
+- **Dual-write:** persist job in Postgres, then enqueue to BullMQ (same UUID). Enqueue failure is logged/surfaced; a transactional outbox would be the production upgrade.
+- After max retries, jobs become **`dead_letter`** (and enter the DLQ), not a generic `failed`-only path.
+
+Details and alternatives: [`docs/architecture.md`](docs/architecture.md).
+
+## Assumptions
+
+- External providers (real email/SMS/SMTP) are **not** integrated; handlers simulate work (logging is enough).
+- API routes are versioned under **`/api/v1`** (e.g. `POST /api/v1/jobs`), not bare `/jobs`.
+- Responses use a uniform envelope: `{ message, statusCode, data }`.
+- Job id field is **`id`** (UUID); retry counter is **`attempts`** (spec’s “retryCount”).
+- Priority is a **number** (higher = more urgent). UI maps High/Medium/Normal → `100` / `50` / `0`.
+- Delay field is **`delayMs`** (relative) or **`runAt`** (absolute ISO); not both.
+- Demo auth: JWT with `admin` / `admin123` (see `.env.example`). Health/metrics/login are public.
+- One Docker Compose stack runs Postgres, Redis, API, and Worker; local Node can use Homebrew Postgres + Docker Redis.
+
 ## Step roadmap
 
-1. **Architecture & scaffold** 
-2. **Database schema (sequelize-typescript)** 
-3. **Job APIs + enqueue** 
-4. **Worker, retries, DLQ, pause/resume**   
+1. **Architecture & scaffold**
+2. **Database schema (sequelize-typescript)**
+3. **Job APIs + enqueue**
+4. **Worker, retries, DLQ, pause/resume**
 5. **JWT, rate limit, logging, metrics**
-6. Tests 
-
-## Requirements
-
-See `requerments.txt`.
+6. Tests
